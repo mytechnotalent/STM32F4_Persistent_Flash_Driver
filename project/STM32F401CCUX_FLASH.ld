@@ -6,7 +6,7 @@
  *
  * AUTHOR: Kevin Thomas
  * CREATION DATE: March 5, 2024
- * UPDATE Date: March 7, 2024
+ * UPDATE Date: March 31, 2024
  */
 
 
@@ -73,5 +73,4 @@ SECTIONS
     _ebss = .;                                             /* define a global symbol at bss end */
     __bss_end__ = _ebss;
   } >RAM
-
 }
