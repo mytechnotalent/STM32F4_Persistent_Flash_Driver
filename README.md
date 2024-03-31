@@ -20,7 +20,7 @@ An STM32F4, persistent flash driver written entirely in Assembler.
  *
  * AUTHOR: Kevin Thomas
  * CREATION DATE: March 7, 2024
- * UPDATE DATE: March 7, 2024
+ * UPDATE DATE: March 31, 2024
  *
  * ASSEMBLE AND LINK w/ SYMBOLS:
  * 1. arm-none-eabi-as -g main.s -o main.o
@@ -99,9 +99,8 @@ An STM32F4, persistent flash driver written entirely in Assembler.
 .section .isr_vector, "a"
 
 /**
- * The STM32F401CCUx vector table.  Note that the proper constructs
- * must be placed on this to ensure that it ends up at physical address
- * 0x0000.0000.
+ * The STM32F401CCUx vector table. Note that the proper constructs must be placed on this to ensure that it ends up
+ * at physical address 0x00000000.
  */
 .global isr_vector
 .type isr_vector, %object
@@ -123,9 +122,9 @@ isr_vector:
    weak PendSV_Handler
    weak SysTick_Handler
   .word 0
-   weak EXTI16_PVD_IRQHandler                              // EXTI Line 16 interrupt /PVD through EXTI line detection interrupt
+   weak EXTI16_PVD_IRQHandler                              // EXTI Line 16 interrupt PVD through EXTI line detection 
    weak TAMP_STAMP_IRQHandler                              // Tamper and TimeStamp interrupts through the EXTI line
-   weak EXTI22_RTC_WKUP_IRQHandler                         // EXTI Line 22 interrupt /RTC Wakeup interrupt through the EXTI line
+   weak EXTI22_RTC_WKUP_IRQHandler                         // EXTI Line 22 interrupt RTC Wakeup interrupt, EXTI line
    weak FLASH_IRQHandler                                   // FLASH global interrupt
    weak RCC_IRQHandler                                     // RCC global interrupt
    weak EXTI0_IRQHandler                                   // EXTI Line0 interrupt
@@ -148,7 +147,7 @@ isr_vector:
    weak EXTI9_5_IRQHandler                                 // EXTI Line[9:5] interrupts
    weak TIM1_BRK_TIM9_IRQHandle                            // TIM1 Break interrupt and TIM9 global interrupt
    weak TIM1_UP_TIM10_IRQHandler                           // TIM1 Update interrupt and TIM10 global interrupt
-   weak TIM1_TRG_COM_TIM11_IRQHandler                      // TIM1 Trigger and Commutation interrupts and TIM11 global interrupt
+   weak TIM1_TRG_COM_TIM11_IRQHandler                      // TIM1 T/C interrupts, TIM11 global interrupt
    weak TIM1_CC_IRQHandler                                 // TIM1 Capture Compare interrupt
    weak TIM2_IRQHandler                                    // TIM2 global interrupt
    weak TIM3_IRQHandler                                    // TIM3 global interrupt
@@ -163,8 +162,8 @@ isr_vector:
    weak USART2_IRQHandler                                  // USART2 global interrupt
   .word 0                                                  // reserved
    weak EXTI15_10_IRQHandler                               // EXTI Line[15:10] interrupts
-   weak EXTI17_RTC_Alarm_IRQHandler                        // EXTI Line 17 interrupt / RTC Alarms (A and B) through EXTI line interrupt
-   weak EXTI18_OTG_FS_WKUP_IRQHandler                      // EXTI Line 18 interrupt / USBUSB OTG FS Wakeup through EXTI line interrupt
+   weak EXTI17_RTC_Alarm_IRQHandler                        // EXTI Line 17 interrupt / RTC Alarms (A and B) EXTI
+   weak EXTI18_OTG_FS_WKUP_IRQHandler                      // EXTI Line 18 interrupt / USBUSB OTG FS Wakeup EXTI
   .word 0                                                  // reserved
   .word 0                                                  // reserved
   .word 0                                                  // reserved
@@ -222,30 +221,30 @@ isr_vector:
 .type Reset_Handler, %function
 .global Reset_Handler
 Reset_Handler:
-  LDR   R0, =_estack                                       // load address at end of the stack into R0
-  MOV   SP, R0                                             // move address at end of stack into SP
-  LDR   R0, =_sdata                                        // copy the data segment initializers from flash to SRAM
-  LDR   R1, =_edata                                        // copy the data segment initializers from flash to SRAM
-  LDR   R2, =_sidata                                       // copy the data segment initializers from flash to SRAM
-  MOVS  R3, #0                                             // copy the data segment initializers from flash to SRAM
+  LDR   R4, =_estack                                       // load address at end of the stack into R0
+  MOV   SP, R4                                             // move address at end of stack into SP
+  LDR   R4, =_sdata                                        // copy the data segment initializers from flash to SRAM
+  LDR   R5, =_edata                                        // copy the data segment initializers from flash to SRAM
+  LDR   R6, =_sidata                                       // copy the data segment initializers from flash to SRAM
+  MOVS  R7, #0                                             // copy the data segment initializers from flash to SRAM
   B     .Reset_Handler_Loop_Copy_Data_Init                 // branch
 .Reset_Handler_Copy_Data_Init:
-  LDR   R4, [R2, R3]                                       // copy the data segment initializers into registers
-  STR   R4, [R0, R3]                                       // copy the data segment initializers into registers
-  ADDS  R3, R3, #4                                         // copy the data segment initializers into registers
+  LDR   R8, [R6, R7]                                       // copy the data segment initializers into registers
+  STR   R8, [R4, R7]                                       // copy the data segment initializers into registers
+  ADDS  R7, R7, #4                                         // copy the data segment initializers into registers
 .Reset_Handler_Loop_Copy_Data_Init:
-  ADDS  R4, R0, R3                                         // initialize the data segment
-  CMP   R4, R1                                             // initialize the data segment
+  ADDS  R8, R4, R7                                         // initialize the data segment
+  CMP   R8, R5                                             // initialize the data segment
   BCC   .Reset_Handler_Copy_Data_Init                      // branch if carry is clear
-  LDR   R2, =_sbss                                         // copy the bss segment initializers from flash to SRAM
-  LDR   R4, =_ebss                                         // copy the bss segment initializers from flash to SRAM
-  MOVS  R3, #0                                             // copy the bss segment initializers from flash to SRAM
+  LDR   R6, =_sbss                                         // copy the bss segment initializers from flash to SRAM
+  LDR   R8, =_ebss                                         // copy the bss segment initializers from flash to SRAM
+  MOVS  R7, #0                                             // copy the bss segment initializers from flash to SRAM
   B     .Reset_Handler_Loop_Fill_Zero_BSS                  // branch
 .Reset_Handler_Fill_Zero_BSS:
-  STR   R3, [R2]                                           // zero fill the bss segment
-  ADDS  R2, R2, #4                                         // zero fill the bss segment
+  STR   R7, [R6]                                           // zero fill the bss segment
+  ADDS  R6, R6, #4                                         // zero fill the bss segment
 .Reset_Handler_Loop_Fill_Zero_BSS:
-  CMP   R2, R4                                             // zero fill the bss segment
+  CMP   R6, R8                                             // zero fill the bss segment
   BCC   .Reset_Handler_Fill_Zero_BSS                       // branch if carry is clear
   BL    main                                               // call function
 
@@ -284,7 +283,7 @@ Default_Handler:
 .type main, %function
 .global main
 main:
-  PUSH  {R4-R11, LR}                                       // push registers R4-R11, LR to the stack
+  PUSH  {R4-R12, LR}                                       // push registers R4-R12, LR to the stack
   BL    Unlock_Flash                                       // call function
   BL    Erase_Sector_5_Flash                               // call function
   BL    Verify_FLASH_SR_BSY_Bit_Cleared                    // call function
@@ -295,7 +294,7 @@ main:
   BL    Verify_FLASH_SR_BSY_Bit_Cleared                    // call function
   BL    Lock_Flash                                         // call function
   BL    Loop                                               // call function
-  POP   {R4-R11, LR}                                       // pop registers R4-R11, LR from the stack
+  POP   {R4-R12, LR}                                       // pop registers R4-R12, LR from the stack
   BX    LR                                                 // return to caller
 
 /**
@@ -308,7 +307,7 @@ main:
  * @retval  None
  */
 Unlock_Flash:
-  PUSH  {R4-R11, LR}                                       // push registers R4-R11, LR to the stack
+  PUSH  {R4-R12, LR}                                       // push registers R4-R12, LR to the stack
   LDR   R4, =0x40023C04                                    // load address of FLASH_KEYR register
   LDR   R5, =0x45670123                                    // load the KEY1 value
   LDR   R6, =0xCDEF89AB                                    // load the KEY2 value
@@ -319,7 +318,7 @@ Unlock_Flash:
   LDR   R6, =0x4C5D6E7F                                    // load the OPTKEY2 value
   STR   R5, [R4]                                           // store value into FLASH_OPTKEYR register
   STR   R6, [R4]                                           // store value into FLASH_OPTKEYR register
-  POP   {R4-R11, LR}                                       // pop registers R4-R11, LR from the stack
+  POP   {R4-R12, LR}                                       // pop registers R4-R12, LR from the stack
   BX    LR                                                 // return to caller
 
 /**
@@ -332,7 +331,7 @@ Unlock_Flash:
  * @retval  None
  */
 Erase_Sector_5_Flash:
-  PUSH  {R4-R11, LR}                                       // push registers R4-R11, LR to the stack
+  PUSH  {R4-R12, LR}                                       // push registers R4-R12, LR to the stack
   LDR   R4, =0x40023C10                                    // load address of FLASH_CR register
   LDR   R5, [R4]                                           // load value inside FLASH_CR register
   ORR   R5, #(1<<16)                                       // set the STRT bit
@@ -340,7 +339,7 @@ Erase_Sector_5_Flash:
   ORR   R5, #(1<<3)                                        // set the SNB bit
   ORR   R5, #(1<<1)                                        // set the SER bit
   STR   R5, [R4]                                           // store value into FLASH_CR register
-  POP   {R4-R11, LR}                                       // pop registers R4-R11, LR from the stack
+  POP   {R4-R12, LR}                                       // pop registers R4-R12, LR from the stack
   BX    LR                                                 // return to caller
 
 /**
@@ -354,12 +353,12 @@ Erase_Sector_5_Flash:
  * @retval  None
  */
 Verify_FLASH_SR_BSY_Bit_Cleared:
-  PUSH  {R4-R11, LR}                                       // push registers R4-R11, LR to the stack
+  PUSH  {R4-R12, LR}                                       // push registers R4-R12, LR to the stack
   LDR   R4, =0x40023C0C                                    // load address of FLASH_SR register
   LDR   R5, [R4]                                           // load value inside FLASH_SR register
   TST   R5, (1<<16)                                        // read the BSY bit, if 1, then BNE
   BNE   Verify_FLASH_SR_BSY_Bit_Cleared                    // branch if not equal
-  POP   {R4-R11, LR}                                       // pop registers R4-R11, LR from the stack
+  POP   {R4-R12, LR}                                       // pop registers R4-R12, LR from the stack
   BX    LR                                                 // return to caller
 
 /**
@@ -371,14 +370,14 @@ Verify_FLASH_SR_BSY_Bit_Cleared:
  * @retval  None
  */
 Enable_Write_To_Flash:
-  PUSH  {R4-R11, LR}                                       // push registers R4-R11, LR to the stack
+  PUSH  {R4-R12, LR}                                       // push registers R4-R12, LR to the stack
   LDR   R4, =0x40023C10                                    // load address of FLASH_CR register
   LDR   R5, [R4]                                           // load value inside FLASH_CR register
   ORR   R5, #(1<<0)                                        // set the PG bit
   ORR   R5, #(1<<9)                                        // set the PSIZE bit
   BIC   R5, #(1<<8)                                        // clear the PSIZE bit
   STR   R5, [R4]                                           // store value into FLASH_CR register
-  POP   {R4-R11, LR}                                       // pop registers R4-R11, LR from the stack
+  POP   {R4-R12, LR}                                       // pop registers R4-R12, LR from the stack
   BX    LR                                                 // return to caller
 
 /**
@@ -394,11 +393,11 @@ Enable_Write_To_Flash:
  * @retval  None
  */
 Write_To_Flash:
-  PUSH  {R4-R11, LR}                                       // push registers R4-R11, LR to the stack
+  PUSH  {R4-R12, LR}                                       // push registers R4-R12, LR to the stack
   MOV   R4, R0                                             // copy first arg into R4
   MOV   R5, R1                                             // copy second arg into R5
   STR   R5, [R4]                                           // store data into sector 5 addr
-  POP   {R4-R11, LR}                                       // pop registers R4-R11, LR from the stack
+  POP   {R4-R12, LR}                                       // pop registers R4-R12, LR from the stack
   BX    LR                                                 // return to caller
 
 /**
@@ -410,12 +409,12 @@ Write_To_Flash:
  * @retval  None
  */
 Lock_Flash:
-  PUSH  {R4-R11, LR}                                       // push registers R4-R11, LR to the stack
+  PUSH  {R4-R12, LR}                                       // push registers R4-R12, LR to the stack
   LDR   R4, =0x40023C10                                    // load address of FLASH_CR register
   LDR   R5, [R4]                                           // load value inside FLASH_CR register
   MOV   R5, #(1<<31)                                       // set the LOCK bit, clear every other bits
   STR   R5, [R4]                                           // store value into FLASH_CR register
-  POP   {R4-R11, LR}                                       // pop registers R4-R11, LR from the stack
+  POP   {R4-R12, LR}                                       // pop registers R4-R12, LR from the stack
   BX    LR                                                 // return to caller
 
 /**
