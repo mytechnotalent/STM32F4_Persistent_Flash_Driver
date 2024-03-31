@@ -1,5 +1,5 @@
 /**
- * FILE: stm32f401ccux.ld
+ * FILE: STM32F401CCUX_FLASH.ld
  *
  * DESCRIPTION:
  * This file contains the linker script utilizing the STM32F401CC6 microcontroller.
